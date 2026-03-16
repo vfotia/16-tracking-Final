@@ -1,0 +1,63 @@
+doctype html
+html
+  head
+    title Backend Test Bench
+    style.
+      body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+      .dashboard { display: flex; gap: 20px; }
+      .controls { flex: 1; border: 1px solid #ccc; padding: 15px; border-radius: 8px; }
+      .output { flex: 1; background: #222; color: #0f0; padding: 15px; border-radius: 8px; overflow-y: auto; height: 400px; }
+      button { margin: 5px 0; display: block; padding: 8px; cursor: pointer; }
+      hr { margin: 20px 0; }
+  
+  body
+    h1 Backend Developer Test Bench
+    p Use this to verify your API routes are working.
+
+    .dashboard
+      .controls
+        h3 Test Actions
+        
+        button(onclick="fetchAllAssets()") 1. Fetch All Assets (GET /api/assets)
+        
+        hr
+        
+        input(type="text" id="searchName" placeholder="Enter asset name...")
+        button(onclick="searchAsset()") 2. Search Asset (GET /api/search)
+        
+        hr
+        
+        button(onclick="simulateTracker()") 3. Simulate Tracker Move (POST /api/update)
+
+      .output
+        h3 Server Response:
+        pre#jsonOutput // Results will appear here...
+
+    script.
+      function display(data) {
+          document.getElementById('jsonOutput').textContent = JSON.stringify(data, null, 2);
+      }
+
+      async function fetchAllAssets() {
+          const response = await fetch('/api/assets');
+          const data = await response.json();
+          display(data);
+      }
+
+      async function searchAsset() {
+          const name = document.getElementById('searchName').value;
+          const response = await fetch(`/api/search?name=${name}`);
+          const data = await response.json();
+          display(data);
+      }
+
+      async function simulateTracker() {
+          const fakeData = { id: "T-001", lat: 45.0, lng: -80.0 };
+          const response = await fetch('/api/update', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(fakeData)
+          });
+          const result = await response.text();
+          display({ message: result, note: "Now click 'Fetch All' to see the update!" });
+      }
