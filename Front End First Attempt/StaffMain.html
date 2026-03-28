@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>St. Joseph Hospital Asset Tracker</title>
+    <meta name="description" content="Asset tracker web interface for St. Joseph Hospital">
+    <meta name="author" content="16-Tracking ES1050 Team">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="Sidenav_Stylesheet.css">
+    <link rel="stylesheet" type="text/css" href="Floor_map_stylesheet.css">
+    <link rel="icon" type="image/x-icon" href="st_joes_logo_curved_edges.png">
+
+    <style>
+
+        /* Container for the filter section on the sidebar */
+        .filter-section {
+            padding: 10px 0;
+        }
+
+        /* The box that holds filter options, hidden by default */
+        .dropdown-container {
+            display: none;
+            background-color: #222;
+            padding: 15px;
+            border-left: 3px solid #3498db;
+            margin-top: 5px;
+        }
+
+        /* Space between different filter categories */
+        .filter-group {
+            margin-bottom: 20px;
+        }
+
+        /* Styling for the filter category titles lick location, type, etc*/
+        .filter-group h4 {
+            margin: 0 0 10px 0;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+        }
+
+        /* Aligning checkboxes with text */
+        .filter-group label {
+            display: flex;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 14px;
+            color: #ddd;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        /* Highlights */
+        .filter-group label:hover {
+            color: #fff;
+        }
+
+        .filter-group input[type="checkbox"],
+        .filter-group input[type="radio"] {
+            margin-right: 12px;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .clear-btn {
+            width: 100%;
+            background-color: transparent;
+            border: 1px solid #555;
+            color: #bbb;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .clear-btn:hover {
+            background-color: #e74c3c;
+            color: white;
+            border-color: #e74c3c;
+        }
+
+        /* Styled box that appears after a successful asset search */
+        #search-result-container {
+            background-color: #2a2a2a;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            margin-top: 15px;
+            display: none;
+        }
+
+        /* The button inside the search result to open the details panel */
+        #asset-info-link {
+            display: inline-block;
+            background-color: #3498db;
+            color: white !important;
+            text-decoration: none !important;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            width: 100%;
+            text-align: center;
+            box-sizing: border-box;
+            font-weight: bold;
+            transition: background 0.3s;
+            cursor: pointer;
+        }
+
+        #asset-info-link:hover {
+            background-color: #2980b9;
+        }
+
+        /* The sliding panel for asset details on the right side */
+        .detail-panel {
+            position: fixed;
+            top: 0;
+            right: -400px; /* Hidden by default */
+            width: 350px;
+            height: 100%;
+            background-color: #1e1e1e;
+            color: white;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+            transition: right 0.3s ease;
+            z-index: 3000;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        .detail-panel.open {
+            right: 0;
+        }
+
+        .detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .close-panel {
+            font-size: 28px;
+            cursor: pointer;
+            color: #888;
+        }
+
+        .detail-section h4 {
+            color: #3498db;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #2a2a2a;
+            padding-bottom: 5px;
+        }
+
+        .history-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .history-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #2a2a2a;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+<!-- Sidebar navigation -->
+<div class="sidenav">
+    <!-- Link to the main Screen -->
+    <a class="menu" href="Menu%20Screen.html">Return to Login</a>
+    <a class="blankspace"></a>
+    <!-- Floor selection buttons for north and south panels -->
+    <f class="floorselection" onclick="openPage(event, 'North')" id="defaultOpen">North Map</f>
+    <f class="floorselection" onclick="openPage(event, 'South')">South Map</f>
+    <a class="blankspace"></a>
+    <!-- Info tab button-->
+    <a class="floorselection" onclick="openPage(event, 'Info')">Info</a>
+    <a class="blankspace"></a>
+    <!-- Search form -->
+    <form id="AssetForm">
+        <!-- Cretes a search input bar/panel -->
+        <div class="bar">
+            <input class="search-bar" type="text" id="asset" placeholder="Search equipment...">
+        </div>
+        <!-- Search Button -->
+        <button type="submit">Search</button>
+        <!-- The search results dusplay-->
+        <div id="search-result-container">
+            <p style="color: #888; font-size: 11px; margin-bottom: 8px; text-transform: uppercase;">Match Found</p>
+            <!-- Details button -->
+            <a id="asset-info-link">
+                <i class="fa fa-info-circle"></i> View Details
+            </a>
+        </div>
+
+        <!-- Message output (from backend) -->
+        <div id="message"></div>
+    </form>
+    <a class="blankspace"></a>
+    <!-- Filter dropdown section -->
+    <div class="filter-section">
+        <!--Calls on the toggledropdown/Dropdown button -->
+        <button class="dropdown-btn" onclick="toggleDropdown()">
+            Filter Assets <i class="fa fa-caret-down"></i>
+        </button>
+        <!-- dropdown container -->
+        <div id="myDropdown" class="dropdown-container">
+            <!-- location filters -->
+            <div class="filter-group">
+                <h4>Location</h4>
+                <label><input type="checkbox" name="loc" value="north" onchange="applyFilters()"> North Wing</label>
+                <label><input type="checkbox" name="loc" value="south" onchange="applyFilters()"> South Wing</label>
+            </div>
+            <!-- asset type filters -->
+            <div class="filter-group">
+                <h4>Asset Type</h4>
+                <div id="dynamic-asset-types"></div>
+            </div>
+            <!-- time filters -->
+            <div class="filter-group">
+                <h4>Time (Last Seen)</h4>
+                <label><input type="radio" name="time" value="1" onchange="applyFilters()"> Within 1hr</label>
+                <label><input type="radio" name="time" value="24" onchange="applyFilters()"> Past 24hrs</label>
+                <label><input type="radio" name="time" value="all" onchange="applyFilters()" checked> Live (Current)</label>
+            </div>
+            <!-- clear filters button -->
+            <button class="clear-btn" onclick="clearAllFilters()">Clear All Filters</button>
+        </div>
+    </div>
+</div>
+
+<div id="North" class="tabcontent">
+    <img src="SJH%20lvl%201%20North.png" alt="SJH lvl 1 North" class="responsive">
+</div>
+
+<div id="South" class="tabcontent">
+    <img src="SJH%20lvl%201%20South%20same%20size.png" alt="SJH lvl 1 South" class="responsive">
+</div>
+
+<div id="Info" class="tabcontent">
+    Info will display here
+</div>
+<!-- sliding asset detail panel -->
+<div id="asset-detail-panel" class="detail-panel">
+    <div class="detail-header">
+        <h2 id="detail-name" style="margin:0; font-size: 20px;">Asset Name</h2>
+        <span class="close-panel" onclick="closeDetailPanel()">&times;</span>
+    </div>
+    <div class="detail-body">
+        <div class="detail-section">
+            <h4>Information</h4>
+            <p><strong>ID:</strong> <span id="detail-id">---</span></p>
+            <p><strong>Last Known Location:</strong> <span id="detail-loc">---</span></p>
+        </div>
+        <!-- history section -->
+        <div class="detail-section">
+            <h4>Location History</h4>
+            <ul id="detail-history" class="history-list">
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    //Get authentication toekn stored
+    const token = localStorage.getItem('token');
+    //If no token exists, user isn't logged in.. Redirects to login page
+    if (!token) {
+        alert("Please login to access the tracker.");
+        window.location.href = "Login Screen.html";
+    }
+    //Lists of assets for the filter system
+    const assetCategories = ["Wheelchairs", "IV Pumps", "Ventilators", "Beds", "Crash Carts"];
+
+    //Creates the check boxxes for the assets
+    function initializeFilters() {
+        //Get the container of the fillter
+        const typeContainer = document.getElementById('dynamic-asset-types');
+        //Creates a checkboc HTML for each catergory
+        typeContainer.innerHTML = assetCategories.map(type => `
+            <label>
+                <input type="checkbox"
+                name="assetType"
+                value="${type.toLowerCase()}"
+                onchange="applyFilters()">
+                ${type}
+            </label>
+        `).join('');
+    }
+
+    //Show or hide the filter dropdown
+    function toggleDropdown() {
+        //Get hte dropdown element
+        const dropdown = document.getElementById("myDropdown");
+        //Toggle display between visible and hidden
+        dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+    }
+
+    //Ryns whenevr the filters are changed/checked
+    function applyFilters() {
+        //Get the slected filters
+        const selectedTypes = Array.from(document.querySelectorAll('input[name="assetType"]:checked')).map(cb => cb.value);
+        const selectedLocs = Array.from(document.querySelectorAll('input[name="loc"]:checked')).map(cb => cb.value);
+        const selectedTime = document.querySelector('input[name="time"]:checked').value;
+        //This just sends back to the console what was changed
+        console.log("Filters Updated:", { selectedTypes, selectedLocs, selectedTime });
+    }
+
+    //Clear filter button funtion
+    function clearAllFilters() {
+        //Unchecks all the boxes
+        document.querySelectorAll('input[type="checkbox"]').forEach(el => el.checked = false);
+        //Resets the time to current
+        document.querySelector('input[value="all"]').checked = true;
+        //calls the function again
+        applyFilters();
+    }
+
+    function openPage(event, floor) {
+        var i, tabcontent, floorselection;
+        tabcontent = document.getElementsByClassName("tabcontent");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].style.display = "none";
+        }
+        floorselection = document.getElementsByClassName("floorselection");
+        for (i = 0; i < floorselection.length; i++) {
+            floorselection[i].className = floorselection[i].className.replace(" active", "");
+        }
+        document.getElementById(floor).style.display = "block";
+        event.currentTarget.className += " active";
+    }
+
+    // Detail Panel Functions
+    //Opens asset detail panel and laods asset history
+    async function showAssetDetails(assetId, assetName, floor) {
+        //Enters the panel headers
+        document.getElementById('detail-name').textContent = assetName;
+        document.getElementById('detail-id').textContent = assetId;
+        document.getElementById('detail-loc').textContent = floor + " Wing";
+
+        // Not sure if this works: Change the floor view to match the asset location
+        const floorBtn = Array.from(document.getElementsByClassName('floorselection'))
+            .find(el => el.textContent.includes(floor));
+        //Click the floor button if found the asset location
+        if(floorBtn) floorBtn.click();
+
+
+        try {
+            //Rewuest asset hisoty for backend
+            const response = await fetch(`http://localhost:3000/api/history/${assetId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const history = await response.json();
+            //Gets the history list panel/container
+            const historyList = document.getElementById('detail-history');
+
+            //If the history exists
+            if (history.length > 0) {
+                //Populars the container
+                historyList.innerHTML = history.map(h => `
+        <li>
+            <strong>${h.location || 'Unknown Location'}</strong><br>
+            <small style="color:#888">${new Date(h.lastUpdated).toLocaleString()}</small>
+        </li>
+    `).join('');
+            } else {
+                //Prints no history --> Won't crash
+                historyList.innerHTML = "<li>No history found.</li>";
+            }
+        } catch (error) {
+            //WOnt crash if backend sends error
+            document.getElementById('detail-history').innerHTML = "<li>Error loading history.</li>";
+        }
+        //Slife panel open
+        document.getElementById('asset-detail-panel').classList.add('open');
+    }
+
+    //Closes asset detail panel
+    function closeDetailPanel() {
+        document.getElementById('asset-detail-panel').classList.remove('open');
+    }
+
+    window.onload = function() {
+        //Builds the filter checkboxs
+        initializeFilters();
+        document.getElementById("defaultOpen").click();
+    };
+    //Get search form
+    const assetForm = document.getElementById('AssetForm');
+
+    assetForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        //get search input
+        const query = document.getElementById('asset').value;
+        //if search is empty, stops
+        if (!query) return;
+
+        //Sends search request to backend
+        try {
+            const response = await fetch(`http://localhost:3000/api/search?name=${query}`, {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const results = await response.json();
+            //If results are found
+            if (response.ok && results.length > 0) {
+                const container = document.getElementById("search-result-container");
+                const infoLink = document.getElementById("asset-info-link");
+                //Uses the first matching asset -->Not the best becasue when we dd a new asset of the same type, might now work
+                const asset = results[0];
+
+                // Determine the floor/wing from the asset data
+                const displayFloor = asset.floor || asset.category || "General";
+
+                //Update details button tesxt
+                container.style.display = "block";
+                infoLink.innerHTML = `<i class="fa fa-info-circle"></i> Open ${asset.name} Profile`;
+
+                //Button opens detail panel
+                infoLink.onclick = () => showAssetDetails(asset.id, asset.name, displayFloor);
+
+                document.getElementById('message').textContent = "";
+            } else {
+                //No results are found --> Wont crash
+                document.getElementById('message').textContent = "Asset not found.";
+                document.getElementById('search-result-container').style.display = "none";
+            }
+        } catch (error) {
+            //Any backend errors
+            console.error("Search Error:", error);
+            document.getElementById('message').textContent = "Server error. Check console.";
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<!-- HTML5 document declaration -->
+<html lang="en">
+<head>
+    <!-- Character encoding for proper text rendering -->
+    <meta charset="UTF-8">
+
+    <!-- Page title shown in browser tab -->
+    <title>St. Joseph Hospital Asset Tracker Inventory</title>
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <!-- External stylesheet for menu layout -->
+    <link rel="stylesheet" type="text/css" href="Menu_stylesheet.css">
+
+    <!-- Browser tab icon -->
+    <link rel="icon" type="image/x-icon" href="st_joes_logo_curved_edges.png">
+
+    <style>
+        /* Page layout styling */
+        body { font-family: sans-serif; margin: 0; display: flex; background-color: #f8f9fa; height: 100vh; overflow: hidden; }
+
+        /* Left side container (main content area) */
+        .main-container { flex: 1; padding: 30px; overflow-y: auto; }
+
+        /* Blue header banner */
+        .header-banner { background: #0056b3; color: white; padding: 25px; border-radius: 8px; margin-bottom: 30px; }
+
+        /* Right side admin panel */
+        .admin-panel { width: 350px; background: #2c3e50; color: white; height: 100vh; padding: 25px; box-sizing: border-box; overflow-y: auto; border-left: 4px solid #3498db; }
+
+        /* Section inside admin panel */
+        .admin-section { margin-bottom: 30px; }
+
+        /* Admin section header */
+        .admin-section h2 { font-size: 20px; color: #3498db; margin-bottom: 20px; border-bottom: 1px solid #3e4f5f; padding-bottom: 10px; }
+
+        /* Form spacing */
+        .form-group { margin-bottom: 15px; }
+
+        /* Label styling */
+        .form-group label { display: block; font-size: 12px; margin-bottom: 5px; color: #bdc3c7; }
+
+        /* Inputs & dropdowns inside admin panel */
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: none; border-radius: 4px; background: #3e4f5f; color: white; box-sizing: border-box; }
+
+        /* Submit button for registering asset */
+        .submit-btn { width: 100%; background: #28a745; color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+
+        /* Grid layout for asset cards */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+
+        /* Individual asset card */
+        .card { background: white; border: 1px solid #ddd; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; transition: transform 0.2s; }
+
+        /* Hover effect for cards */
+        .card:hover { transform: translateY(-3px); border-color: #3498db; }
+
+        /* Delete button inside card */
+        .delete-btn { background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-top: 15px; width: 100%; }
+
+        /* Modal overlay background */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
+
+        /* Modal content container */
+        .modal-content { background: white; width: 80%; max-width: 800px; max-height: 80vh; border-radius: 8px; padding: 30px; position: relative; overflow-y: auto; }
+
+        /* Close button for modal */
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 25px; cursor: pointer; color: #666; }
+
+        /* Table styling for history */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+
+        /* Table cells */
+        table th, table td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; }
+
+        /* Table header */
+        table th { background: #f4f4f4; color: #333; }
+    </style>
+</head>
+<body>
+
+<!-- Main content area (left side) -->
+<div class="main-container">
+
+    <!-- Page header -->
+    <div class="header-banner">
+        <h1 style="margin:0;">Asset Inventory</h1>
+        <p style="margin:5px 0 0 0; opacity: 0.8;">IT Management Console</p>
+    </div>
+
+    <!-- Search and filter controls -->
+    <div style="display: flex; gap: 15px; margin-bottom: 30px;">
+
+        <!-- Search input -->
+        <input type="text" id="inventory-search" placeholder="Search by name or ID..." style="flex:1; padding:12px; border-radius:4px; border:1px solid #ddd;" oninput="filterAssets()">
+
+        <!-- Type filter dropdown -->
+        <select id="type-filter" onchange="filterAssets()" style="padding:12px; border-radius:4px; border:1px solid #ddd;">
+            <option value="all">All Types</option>
+            <option value="wheelchairs">Wheelchairs</option>
+            <option value="iv pumps">IV Pumps</option>
+            <option value="beds">Beds</option>
+        </select>
+    </div>
+
+    <!-- Container where asset cards are dynamically inserted -->
+    <div id="asset-display" class="grid"></div>
+</div>
+
+<!-- Modal used to display asset location history -->
+<div id="history-modal" class="modal-overlay">
+    <div class="modal-content">
+
+        <!-- Close modal button -->
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+
+        <!-- Modal title -->
+        <h2 id="modal-title" style="color: #0056b3; margin-top: 0;">Asset History</h2>
+
+        <!-- History filter section -->
+        <div style="display: flex; align-items: center; gap: 10px; background: #f0f4f8; padding: 15px; border-radius: 5px;">
+            <label>Filter History:</label>
+
+            <!-- Filter by time period -->
+            <select id="history-days" onchange="refreshHistory()" style="padding: 8px; border-radius: 4px;">
+                <option value="0">All Time</option>
+                <option value="1">Last 24 Hours</option>
+                <option value="7">Last 7 Days</option>
+                <option value="30">Last 30 Days</option>
+            </select>
+        </div>
+
+        <!-- History table -->
+        <table id="history-table">
+            <thead>
+            <tr>
+                <th>Location</th>
+                <th>Date/Time</th>
+            </tr>
+            </thead>
+
+            <!-- Table body filled dynamically -->
+            <tbody id="history-body">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Admin panel (right side) -->
+<div class="admin-panel">
+    <div class="admin-section">
+
+        <!-- Admin tools header -->
+        <h2>IT Toolbox</h2>
+
+        <!-- Form to register new asset -->
+        <form id="assetForm">
+
+            <!-- Asset ID input -->
+            <div class="form-group"><label>Asset ID</label><input type="text" id="new-id" required></div>
+
+            <!-- Asset display name -->
+            <div class="form-group"><label>Display Name</label><input type="text" id="new-name" required></div>
+
+            <!-- Asset category dropdown -->
+            <div class="form-group">
+                <label>Category</label>
+                <select id="new-category">
+                    <option value="general">General</option>
+                    <option value="wheelchairs">Wheelchairs</option>
+                    <option value="iv pumps">IV Pumps</option>
+                    <option value="beds">Beds</option>
+                </select>
+            </div>
+
+            <!-- Submit new asset -->
+            <button type="submit" class="submit-btn">Register Asset</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Get authentication token stored after login
+    const token = localStorage.getItem('token');
+
+    // Stores which asset is currently selected in the modal
+    let activeAssetId = null;
+
+    // Fetch and display all assets from backend
+    async function showAssets() {
+        const display = document.getElementById('asset-display');
+        try {
+
+            // Request asset list from API
+            const response = await fetch('http://localhost:3000/api/assets', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            const data = await response.json();
+
+            // If request successful
+            if (response.ok) {
+                display.innerHTML = '';
+
+                // Create card for each asset
+                data.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+
+                    // Clicking card opens history modal
+                    card.onclick = () => openHistory(item.id, item.name);
+
+                    const cat = (item.category || 'general').toLowerCase();
+
+                    // Store searchable values as attributes
+                    card.setAttribute('data-name', item.name.toLowerCase());
+                    card.setAttribute('data-id', item.id.toLowerCase());
+                    card.setAttribute('data-type', cat);
+
+                    // Card HTML content
+                    card.innerHTML = `
+                        <div class="asset-name"><strong>${item.name}</strong></div>
+                        <div class="asset-id">ID: ${item.id}</div>
+                        <div style="font-size: 11px; color: #3498db; text-transform: uppercase;">${cat}</div>
+                        <button class="delete-btn" onclick="event.stopPropagation(); deleteAsset('${item.id}')">Delete</button>
+                    `;
+
+                    // Add card to grid
+                    display.appendChild(card);
+                });
+            }
+        } catch (e) {
+            display.innerHTML = "Error loading assets.";
+        }
+    }
+
+    // Opens modal and loads history
+    async function openHistory(id, name) {
+        activeAssetId = id;
+
+        // Update modal title
+        document.getElementById('modal-title').innerText = `History for ${name} (${id})`;
+
+        // Show modal
+        document.getElementById('history-modal').style.display = 'flex';
+
+        // Reset filter to all time
+        document.getElementById('history-days').value = "0";
+
+        refreshHistory();
+    }
+
+    // Close modal
+    function closeModal() {
+        document.getElementById('history-modal').style.display = 'none';
+        activeAssetId = null;
+    }
+
+    // Fetch history for selected asset
+    async function refreshHistory() {
+        if (!activeAssetId) return;
+
+        const days = document.getElementById('history-days').value;
+        const tbody = document.getElementById('history-body');
+
+        // Loading message
+        tbody.innerHTML = '<tr><td colspan="2">Loading history...</td></tr>';
+
+        try {
+
+            // Request history data
+            const response = await fetch(`http://localhost:3000/api/history/${activeAssetId}?days=${days}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            const data = await response.json();
+
+            tbody.innerHTML = '';
+
+            // If no history records
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="2">No history records found for this period.</td></tr>';
+            } else {
+
+                // Populate table
+                data.forEach(entry => {
+                    const row = `<tr>
+                        <td>${entry.location || 'Unknown Location'}</td>
+                        <td>${new Date(entry.lastUpdated).toLocaleString()}</td>
+                    </tr>`;
+
+                    tbody.innerHTML += row;
+                });
+            }
+        } catch (err) {
+            tbody.innerHTML = '<tr><td colspan="2" style="color:red">Failed to load history.</td></tr>';
+        }
+    }
+
+    // Filter assets based on search and type
+    function filterAssets() {
+        const query = document.getElementById('inventory-search').value.toLowerCase();
+        const type = document.getElementById('type-filter').value.toLowerCase();
+
+        document.querySelectorAll('.card').forEach(card => {
+            const matchSearch = card.getAttribute('data-name').includes(query) || card.getAttribute('data-id').includes(query);
+            const matchType = (type === 'all' || card.getAttribute('data-type') === type);
+
+            // Show or hide card
+            card.style.display = (matchSearch && matchType) ? "block" : "none";
+        });
+    }
+
+    // Handle register asset form submission
+    document.getElementById('assetForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // Collect form data
+        const assetData = {
+            id: document.getElementById('new-id').value,
+            name: document.getElementById('new-name').value,
+            category: document.getElementById('new-category').value
+        };
+
+        // Send POST request to backend
+        const res = await fetch('http://localhost:3000/api/assets', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify(assetData)
+        });
+
+        // Refresh list if successful
+        if (res.ok) { showAssets(); document.getElementById('assetForm').reset(); }
+    });
+
+    // Delete asset by ID
+    async function deleteAsset(id) {
+        if (!confirm("Delete " + id + "?")) return;
+
+        await fetch(`http://localhost:3000/api/assets/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        showAssets();
+    }
+
+    // Load assets when page loads
+    window.onload = showAssets;
+</script>
+</body>
+</html>

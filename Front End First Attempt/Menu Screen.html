@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>St. Joeseph Hospital Asset Tracker Login In</title>
+  <meta name="description" content="Login for Asset tracker web interface for St. Joeseph Hospital">
+  <meta name="author" content="16-Tracking ES1050 Team">
+  <!-- Add icon library -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" type="text/css" href="Menu_stylesheet.css">
+  <link rel="icon" type="image/x-icon" href="st_joes_logo_curved_edges.png">
+</head>
+<body>
+<!--create login form-->
+<form id="LoginForm" action="action_page.php" method="post">
+  <div class="imgcontainer">
+    <img src="st_joes_logo_curved_edges.png" alt="Avatar" class="avatar">
+    <div class="title">Asset Tracker</div>
+  </div>
+
+  <div class="container">
+    <label for="uname"><b>Username</b></label>
+    <input type="text" placeholder="Enter Username" id="username" name="uname" required>
+
+    <label for="psw"><b>Password</b></label>
+    <input type="password" placeholder="Enter Password" id="password" name="psw" required>
+    <button type="submit">Login</button>
+  </div>
+  <div id="message"></div>
+
+
+</form>
+
+<script>
+
+  //Gets information from ID=LoginForm
+  const logInForm = document.getElementById('LoginForm');
+  //Receives any messages from the Backend
+  const messageDiv = document.getElementById('message');
+
+  logInForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    //Stores login information from ID=username and ID=password
+    const loginData = {
+      username: document.getElementById('username').value,
+      password: document.getElementById('password').value,
+    };
+
+    try {
+      //Connects to the Backend and tries to login
+      const response = await fetch('http://localhost:3000/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loginData)
+      });
+
+      const result = await response.json();
+
+      //If Backend says the information in accurate, it allows Frontend to continue
+      if (response.ok) {
+        // Save token and role
+        localStorage.setItem('token', result.token);
+        const roleToSave = result.role ? result.role.toLowerCase().trim() : "";
+        localStorage.setItem('role', roleToSave);
+
+        console.log("Login successful. Token saved:", result.token); // Debug check
+
+        messageDiv.textContent = "Login successful! Redirecting...";
+        messageDiv.style.color = "green";
+
+        setTimeout(() => {
+          if (roleToSave === "it" || roleToSave === "admin") {
+            window.location.href = "ITMain.html";
+          } else {
+            window.location.href = "StaffMain.html";
+          }
+        }, 500);
+
+        //Prints Error
+      } else {
+        messageDiv.textContent = result.message;
+        messageDiv.style.color = "red";
+      }
+    } catch (error) {
+      //Finds the error
+      console.error("Fetch error:", error);
+      messageDiv.textContent = "Connection error. Ensure backend is running on port 3000.";
+      messageDiv.style.color = "red";
+    }
+  });
+</script>
+</body>
+</html>
