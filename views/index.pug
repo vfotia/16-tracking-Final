@@ -1,63 +1,138 @@
 doctype html
 html
   head
-    title Backend Test Bench
+    title= title
+    link(rel='stylesheet', href='/stylesheets/style.css')
     style.
-      body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
-      .dashboard { display: flex; gap: 20px; }
-      .controls { flex: 1; border: 1px solid #ccc; padding: 15px; border-radius: 8px; }
-      .output { flex: 1; background: #222; color: #0f0; padding: 15px; border-radius: 8px; overflow-y: auto; height: 400px; }
-      button { margin: 5px 0; display: block; padding: 8px; cursor: pointer; }
-      hr { margin: 20px 0; }
-  
+      .console-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; }
+      .box { border: 1px solid #ccc; padding: 15px; border-radius: 8px; background: #f9f9f9; }
+      pre { background: #eee; padding: 10px; font-size: 12px; max-height: 200px; overflow-y: auto; }
+      .status-bar { background: #333; color: white; padding: 10px; margin-bottom: 20px; }
+
   body
-    h1 Backend Developer Test Bench
-    p Use this to verify your API routes are working.
+    div.status-bar
+      h1= title
+      p Status:
+        span#auth-status Not Logged In
+        span#token-display(style="font-size: 10px; margin-left: 20px; color: #aaa;")
 
-    .dashboard
-      .controls
-        h3 Test Actions
-        
-        button(onclick="fetchAllAssets()") 1. Fetch All Assets (GET /api/assets)
-        
-        hr
-        
-        input(type="text" id="searchName" placeholder="Enter asset name...")
-        button(onclick="searchAsset()") 2. Search Asset (GET /api/search)
-        
-        hr
-        
-        button(onclick="simulateTracker()") 3. Simulate Tracker Move (POST /api/update)
+    div.console-grid
+      // --- SECTION 1: AUTHENTICATION ---
+      div.box
+        h3 1. Identity (Auth)
+        input#reg-user(placeholder="Username")
+        input#reg-pass(type="password" placeholder="Password")
+        button(onclick="authAction('/api/register')") Register
+        button(onclick="login()") Login
+        p(style="font-size: 11px") *Login to get the 'Wristband' (Token) for protected routes.
 
-      .output
-        h3 Server Response:
-        pre#jsonOutput // Results will appear here...
+      // --- SECTION 2: ASSET MANAGEMENT ---
+      div.box
+        h3 2. Asset Management
+        input#asset-id(placeholder="Asset ID (e.g. T-100)")
+        input#asset-name(placeholder="Asset Name")
+        button(onclick="postAsset()") Add Asset
+        hr
+        input#delete-id(placeholder="ID to Delete")
+        button(onclick="deleteAsset()" style="background: #ffcccc") Delete Asset
+
+      // --- SECTION 3: SEARCH & FILTERS ---
+      div.box
+        h3 3. Search & Discovery
+        input#search-query(placeholder="Search by name...")
+        button(onclick="searchAssets()") Search
+        button(onclick="fetchAll()") View All
+
+      // --- SECTION 4: HISTORY ---
+      div.box
+        h3 4. Location History
+        input#hist-id(placeholder="Asset ID")
+        input#hist-days(type="number" placeholder="Days (optional)")
+        button(onclick="fetchHistory()") Get History
+
+    div(style="padding: 20px;")
+      h3 Console Output
+      pre#output Select an action to see results...
 
     script.
-      function display(data) {
-          document.getElementById('jsonOutput').textContent = JSON.stringify(data, null, 2);
+      let savedToken = "";
+
+      // Helper to display results
+      function show(data) {
+        document.getElementById('output').innerText = JSON.stringify(data, null, 2);
       }
 
-      async function fetchAllAssets() {
-          const response = await fetch('/api/assets');
-          const data = await response.json();
-          display(data);
+      // LOGIN LOGIC
+      async function login() {
+        const username = document.getElementById('reg-user').value;
+        const password = document.getElementById('reg-pass').value;
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({username, password, role: "engineer"})
+        });
+        const data = await res.json();
+        if(data.token) {
+          savedToken = data.token;
+          document.getElementById('auth-status').innerText = "Logged In as " + username;
+          document.getElementById('auth-status').style.color = "#4CAF50";
+          show({ message: "Login Successful", token: savedToken });
+        } else {
+          show(data);
+        }
       }
 
-      async function searchAsset() {
-          const name = document.getElementById('searchName').value;
-          const response = await fetch(`/api/search?name=${name}`);
-          const data = await response.json();
-          display(data);
+      // REGISTER LOGIC
+      async function authAction(url) {
+        const username = document.getElementById('reg-user').value;
+        const password = document.getElementById('reg-pass').value;
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({username, password, role: "engineer"})
+        });
+        show(await res.json());
       }
 
-      async function simulateTracker() {
-          const fakeData = { id: "T-001", lat: 45.0, lng: -80.0 };
-          const response = await fetch('/api/update', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(fakeData)
-          });
-          const result = await response.text();
-          display({ message: result, note: "Now click 'Fetch All' to see the update!" });
+      // ADD ASSET
+      async function postAsset() {
+        const id = document.getElementById('asset-id').value;
+        const name = document.getElementById('asset-name').value;
+        const res = await fetch('/api/assets', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({id, name})
+        });
+        show(await res.json());
+      }
+
+      // DELETE ASSET (PROTECTED)
+      async function deleteAsset() {
+        const id = document.getElementById('delete-id').value;
+        const res = await fetch(`/api/assets/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${savedToken}` }
+        });
+        show(await res.json());
+      }
+
+      // SEARCH
+      async function searchAssets() {
+        const q = document.getElementById('search-query').value;
+        const res = await fetch(`/api/search?name=${q}`);
+        show(await res.json());
+      }
+
+      // FETCH ALL
+      async function fetchAll() {
+        const res = await fetch('/api/assets');
+        show(await res.json());
+      }
+
+      // HISTORY
+      async function fetchHistory() {
+        const id = document.getElementById('hist-id').value;
+        const days = document.getElementById('hist-days').value;
+        const res = await fetch(`/api/history/${id}?days=${days}`);
+        show(await res.json());
       }
