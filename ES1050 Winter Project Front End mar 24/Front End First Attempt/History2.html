@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>St. Joseph Hospital Asset Management</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f8f9fa; }
+        .header { background: #0056b3; color: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .card {
+            background: white; border: 1px solid #ddd; padding: 20px;
+            border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .asset-name { font-weight: bold; font-size: 1.1em; color: #333; margin-bottom: 5px; }
+        .asset-id { color: #666; font-size: 0.9em; margin-bottom: 15px; }
+        .delete-btn {
+            background-color: #dc3545; color: white; border: none;
+            padding: 8px 12px; border-radius: 4px; cursor: pointer;
+            font-size: 0.8em;
+        }
+        @media (max-width: 1000px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Hospital Asset Inventory</h1>
+    <p>Asset list (Management features restricted to IT Staff).</p>
+</div>
+
+<div id="asset-display" class="grid">
+    <p>Loading assets...</p>
+</div>
+
+<script>
+    const token = localStorage.getItem('token');
+
+    // Helper function to decode the JWT token and get the user's role
+    function getUserRole(token) {
+        if (!token) return null;
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload).role;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    async function showAssets() {
+        const display = document.getElementById('asset-display');
+        const userRole = getUserRole(token);
+
+        try {
+            const response = await fetch('http://localhost:3000/api/assets', {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                display.innerHTML = '';
+                data.forEach(item => {
+                    const box = document.createElement('div');
+                    box.className = 'card';
+
+                    // Start building the HTML content
+                    let cardHTML = `
+                        <div class="asset-name">${item.name}</div>
+                        <div class="asset-id">ID: ${item.id}</div>
+                    `;
+
+                    // ONLY add the button if the role is 'it'
+                    if (userRole === 'it') {
+                        cardHTML += `<button class="delete-btn" onclick="deleteAsset('${item.id}')">Delete Asset</button>`;
+                    }
+
+                    box.innerHTML = cardHTML;
+                    display.appendChild(box);
+                });
+            }
+        } catch (err) {
+            display.innerHTML = `<p style="color:red">Error connecting to server.</p>`;
+        }
+    }
+
+    async function deleteAsset(id) {
+        if (!confirm(`Confirm deletion of asset ${id}?`)) return;
+        try {
+            const response = await fetch(`http://localhost:3000/api/assets/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                showAssets();
+            } else {
+                alert("Action failed. You may not have permission.");
+            }
+        } catch (err) {
+            alert("Connection error.");
+        }
+    }
+
+    window.onload = showAssets;
+</script>
+
+</body>
+</html>

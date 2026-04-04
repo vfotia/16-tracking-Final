@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>St. Joseph Hospital Asset Tracker - History</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f4f4f4; }
+        .history-container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .info-card { background: #fafafa; border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #eee; }
+        .filter-section { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="history-container">
+    <h1>Asset History: <span id="displayName">Loading...</span></h1>
+
+    <div class="filter-section">
+        <label>Show history for: </label>
+        <select id="dayFilter">
+            <option value="0">All Time</option>
+            <option value="1">Last 24 Hours</option>
+            <option value="3">Last 3 Days</option>
+            <option value="7">Last 7 Days</option>
+        </select>
+        <button onclick="loadHistoryData()">Apply Filter</button>
+    </div>
+
+    <div class="info-card">
+        <p><strong>Tracking ID:</strong> <span id="displayId">-</span></p>
+        <p><strong>Current Status:</strong> <span style="color: green;">Active</span></p>
+        <p><strong>Last Ping:</strong> <span id="displayTime">-</span></p>
+    </div>
+
+    <h3>Location Log</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>Time Seen</th>
+            <th>Location</th>
+        </tr>
+        </thead>
+        <tbody id="historyTableBody">
+        <tr><td colspan="2" style="text-align:center;">Fetching data...</td></tr>
+        </tbody>
+    </table>
+
+    <br>
+    <button onclick="window.history.back()">← Back to Map</button>
+</div>
+
+<script>
+    // DECLARE THESE ONLY ONCE
+    const token = localStorage.getItem('token');
+    const urlParams = new URLSearchParams(window.location.search);
+    const assetId = urlParams.get('id');
+
+    // Check login
+    if (!token) {
+        alert("Please login first.");
+        window.location.href = "Login Screen.html";
+    }
+
+    async function loadHistoryData() {
+        if (!assetId) {
+            document.getElementById('displayName').textContent = "No Asset ID Found";
+            return;
+        }
+
+        const days = document.getElementById('dayFilter').value;
+        const tableBody = document.getElementById('historyTableBody');
+
+        try {
+            // Updated to match your new backend route: /api/history/:id
+            const response = await fetch(`http://localhost:3000/api/history/${assetId}?days=${days}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) throw new Error("Server error");
+
+            const results = await response.json();
+            tableBody.innerHTML = ""; // Clear the "Fetching..." message
+
+            if (results && results.length > 0) {
+                const latest = results[0];
+                document.getElementById('displayName').textContent = latest.name;
+                document.getElementById('displayId').textContent = latest.id;
+                document.getElementById('displayTime').textContent = new Date(latest.timestamp || latest.lastUpdated).toLocaleString();
+
+                results.forEach(entry => {
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td>${new Date(entry.timestamp || entry.lastUpdated).toLocaleString()}</td>
+                            <td>${entry.location || 'Hospital Sector'}</td>
+                        </tr>`;
+                });
+            } else {
+                tableBody.innerHTML = "<tr><td colspan='2'>No history found for this time period.</td></tr>";
+                document.getElementById('displayName').textContent = "Asset Found (No History)";
+            }
+        } catch (error) {
+            console.error("Fetch Error:", error);
+            document.getElementById('displayName').textContent = "Connection Error";
+            tableBody.innerHTML = "<tr><td colspan='2' style='color:red;'>Make sure your Node.js backend is running!</td></tr>";
+        }
+    }
+
+    // Run automatically when the page opens
+    window.onload = loadHistoryData;
+</script>
+
+</body>
+</html>
