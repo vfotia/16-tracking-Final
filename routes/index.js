@@ -1,19 +1,23 @@
+/** A
+ * SSET TRACKER BACKEND - ROUTE CONTROLLER
+ * This file manages user accounts, login security, and the
+ * tracking data for hospital equipment.
+ */
+
 var express = require('express');
 var router = express.Router();
 
-//Imports a library that encrypts stored passwords
+// External tools for security and tokens
 const bcrypt = require('bcryptjs');
-//Imports a library that stores and checks log in information
 const jwt = require('jsonwebtoken');
 
 //Security Key for the backend (Do not change)
 const JWT_SECRET = "67";
 
-// Function to check if a user is logged in
+// MIDDLEWARE: Verifies that a user is logged in before allowing access
 const authenticateToken = (req, res, next) => {
   const token = req.headers['authorization']?.split(" ")[1];
   if (!token) return res.status(401).json({ message: "No token provided" });
-
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) return res.status(403).json({ message: "Invalid token" });
     req.user = user;
@@ -21,10 +25,9 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-//Creates an array of users/ This will delete once the system turns off/ Will need to replace with a database
+/* --- TEMPORARY SYSTEM DATA --- */
 let users = [];
-//Stores location history of assets
-// Each entry will look like: { id: "T-001", lat: 42.9, lng: -81.2, timestamp: Date }
+
 let locationHistory = [
   { id: "T-100", name: "Red Truck", location: "North Wing - Room 202", lastUpdated: new Date("2026-03-25T10:00:00"), floor: "North"},
   { id: "T-100", name: "Red Truck", location: "North Wing - Hallway B", lastUpdated: new Date("2026-03-25T09:30:00"), floor: "North"},
@@ -35,27 +38,32 @@ let locationHistory = [
   { id: "T-200", name: "WheelChair", location: "Loading Dock", lastUpdated: new Date("2026-03-18T09:00:00"), floor: "North"  },
   { id: "T-200", name: "WheelChair", location: "Loading Dock", lastUpdated: new Date("2026-03-10T09:00:00"), floor: "South"  }
 ];
-// Assets array
+
 let assets = [
   {
     id: "T-100",
     name: "Red Truck",
+    category: "crash carts", // Matches 'Crash Carts' filter
+    floor: "north",          // Matches 'North Wing' filter
+    location: "Room 202",    // For the Detail Panel
     lastUpdated: new Date()
   },
   {
     id: "T-200",
     name: "Wheelchair",
+    category: "wheelchairs", // Matches 'Wheelchairs' filter (added 's')
+    floor: "south",          // Matches 'South Wing' filter
+    location: "Hallway B",   // For the Detail Panel
     lastUpdated: new Date()
   }
 ];
 
-//Method for different methods here to force only a certain role to be able to use that function
+// MIDDLEWARE: Restricts actions based on user role (e.g., IT vs General)
 const authorizeRole = (roleRequired) => {
   return (req, res, next) => {
     authenticateToken(req, res, () => {
       // Force both to lowercase for a safe comparison
       const userRole = req.user.role ? req.user.role.toLowerCase() : "";
-
       // Check if user is the specific role OR a general admin
       if (userRole === roleRequired.toLowerCase() || userRole === "admin") {
         next();
@@ -66,7 +74,10 @@ const authorizeRole = (roleRequired) => {
     });
   };
 };
-// Registers users
+
+/* --- USER AUTHENTICATION ROUTES --- */
+
+// POST: Register a new user and hash their password
 router.post('/api/register', async (req, res) => {
   const { username, password, role } = req.body;
   // 1. CHECK IF USER EXISTS
@@ -80,7 +91,8 @@ router.post('/api/register', async (req, res) => {
   users.push({ username, password: hashedPassword, role: role });
   res.status(201).json({ message: "User created!" });
 });
-//Logs in users, Needs a password and username
+
+// POST: Log in a user and return a security token
 router.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   const user = users.find(u => u.username === username);
@@ -98,58 +110,26 @@ router.post('/api/login', async (req, res) => {
   }
 });
 
-/* This is a location update code block, if needed, uncomment
-router.post('/api/update', (req, res) => {
-  const { id, rssi } = req.body;
+/* --- ASSET MANAGEMENT ROUTES --- */
 
-  const x = mapRange(rssi, -90, -30, 0, 1000);
-  const y = 500;
-  const now = new Date();
-
-  let asset = assets.find(a => a.id === id);
-  if (asset) {
-    asset.lat = y;
-    asset.lng = x;
-    asset.lastUpdated = now;
-  }
-
-  // Use x and y here!
-  locationHistory.push({
-    id: id,
-    lat: y,
-    lng: x,
-    timestamp: now
-  });
-
-  res.json({ message: "Location updated" }); // Always send a response!
-});
-*/
-
-//Accessing the asset history
-//Require the certain asset
+// GET: Retrieve location history for a specific asset I
 router.get('/api/history/:id', authenticateToken, (req, res) => {
   const { id } = req.params;
   const days = req.query.days ? parseInt(req.query.days) : 0;
-
   // Filter by ID
   let results = locationHistory.filter(h => h.id === id);
-
   if (days > 0) {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - days);
-
-    // FIX: Changed h.timestamp to h.lastUpdated to match your array
     results = results.filter(h => new Date(h.lastUpdated) >= cutoff);
   }
 
-  // Sort by newest first so the top of the table is the most recent
+  //Sort by newest first so the top of the table is the most recent
   results.sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
-
   res.json(results);
 });
 
-//HOME PAGE ROUTE
-// This displays your main website (index.ejs)
+// GET: Render the main dashboard page
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Asset Tracker System' });
 });
@@ -173,14 +153,12 @@ router.get('/api/search', authenticateToken, (req, res) => {
   }
 });
 
-//All assets route
-// This sends the entire list
+// GET: List all currently tracked assets
 router.get('/api/assets', authenticateToken, (req, res) => {
   res.json(assets);
 });
 
-//Delete assets route
-//Allows frontend to delete assets
+// DELETE: Remove an asset from the list (Requires IT permissions)
 router.delete('/api/assets/:id', authorizeRole("it"),  (req, res) => {
   //stores the object we want to delete
   const {id} = req.params;
@@ -208,7 +186,7 @@ router.post('/api/assets', authorizeRole("it"), (req, res) => {
   if (existing) {
     return res.status(409).json({ message: "An asset with this ID already exists." });
   }
-  //Create the new asset object
+  // POST: Add a new asset to the tracking system (Requires IT permissions)
   const newAsset = {
     id: id,
     name: name,
@@ -220,9 +198,4 @@ router.post('/api/assets', authorizeRole("it"), (req, res) => {
   assets.push(newAsset);
   res.status(201).json({ message: "Asset added successfully!", asset: newAsset });
 });
-
-
-
-
-
 module.exports = router;
