@@ -4,13 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7cbc2a3d-66fb-41b1-93c2-c4da0346573f" name="Changes" comment="Deleted the mock database">
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/bin_www.xml" beforeDir="false" />
-    </list>
+    <list default="true" id="7cbc2a3d-66fb-41b1-93c2-c4da0346573f" name="Changes" comment="Deleted the mock database" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -127,6 +121,7 @@
       <workItem from="1775244089188" duration="1786000" />
       <workItem from="1775304944624" duration="2270000" />
       <workItem from="1775325182952" duration="465000" />
+      <workItem from="1775325762305" duration="369000" />
     </task>
     <task id="LOCAL-00001" summary="Deleted the mock database">
       <option name="closed" value="true" />
