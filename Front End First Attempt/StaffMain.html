@@ -465,8 +465,56 @@
 <div id="South" class="tabcontent">
     <iframe src="Map.html" height="750" width="1100" title="South Map View"></iframe>
 </div>
-<div id="Info" class="tabcontent">
-    Info will display here
+<div id="Info" class="tabcontent" style="padding-left: 0px; padding-top: 50px; box-sizing: border-box; width: 100%;">
+
+    <div style="max-width: 900px; margin: 0 auto;">
+
+        <div style="text-align: center; margin-bottom: 40px;">
+            <h2 style="color: #3498db; font-size: 14px; text-transform: uppercase; letter-spacing: 4px; margin-bottom: 5px;">St. Joseph Hospital</h2>
+            <h1 style="color: #fff; margin-top: 0; font-size: 2.2rem;">Asset Tracking Support</h1>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 40px;">
+            <div style="background: #252525; padding: 25px; border-radius: 12px; border-left: 4px solid #3498db; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                <h3 style="color: #fff; margin-top: 0;"><i class="fa fa-search" style="margin-right: 10px; color: #3498db;"></i>Finding Equipment</h3>
+                <p style="font-size: 13px; line-height: 1.6; color: #bbb;">Use the <b>Search Bar</b> in the sidebar to find specific IDs. Click <b>"View"</b> to center the map on that asset's location.</p>
+            </div>
+
+            <div style="background: #252525; padding: 25px; border-radius: 12px; border-left: 4px solid #e67e22; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                <h3 style="color: #fff; margin-top: 0;"><i class="fa fa-wrench" style="margin-right: 10px; color: #e67e22;"></i>Reporting Issues</h3>
+                <p style="font-size: 13px; line-height: 1.6; color: #bbb;">If an asset is broken, click it on the map and use the <b>"Report Maintenance"</b> form to alert the IT team.</p>
+            </div>
+        </div>
+
+        <div style="background: #1a1a1a; padding: 30px; border-radius: 12px; border: 1px solid #333;">
+            <h3 style="color: #fff; border-bottom: 1px solid #333; padding-bottom: 15px; margin-top: 0;">
+                <i class="fa fa-question-circle" style="margin-right: 10px; color: #f1c40f;"></i>Troubleshooting Guide
+            </h3>
+
+            <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; color: #ddd;">
+                <thead>
+                <tr style="text-align: left; color: #888; text-transform: uppercase; font-size: 11px;">
+                    <th style="padding: 10px; border-bottom: 2px solid #333;">The Problem</th>
+                    <th style="padding: 10px; border-bottom: 2px solid #333;">What to check</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td style="padding: 15px 10px; border-bottom: 1px solid #252525; color: #fff; font-weight: 600;">Asset is not moving</td>
+                    <td style="padding: 15px 10px; border-bottom: 1px solid #252525; line-height: 1.5;">Check the <b>"Last Seen"</b> time. If it's old, the tracker battery may be dead or out of range.</td>
+                </tr>
+                <tr>
+                    <td style="padding: 15px 10px; border-bottom: 1px solid #252525; color: #fff; font-weight: 600;">"Matches Found: 0"</td>
+                    <td style="padding: 15px 10px; border-bottom: 1px solid #252525; line-height: 1.5;">Check your <b>Filters</b>. Ensure you haven't filtered out the item you are searching for.</td>
+                </tr>
+                <tr>
+                    <td style="padding: 15px 10px; color: #fff; font-weight: 600;">Map is blank</td>
+                    <td style="padding: 15px 10px; line-height: 1.5;">Refresh the page <b>(F5)</b> or contact IT \.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <div id="asset-detail-panel" class="detail-panel">

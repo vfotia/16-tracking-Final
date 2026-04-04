@@ -486,8 +486,68 @@
 <div id="South" class="tabcontent">
     <iframe src="Map.html" height="750" width="1100" title="South Map View"></iframe>
 </div>
-<div id="Info" class="tabcontent">
-    Info will display here
+<div id="Info" class="tabcontent" style="padding:0; padding-top: 50px; box-sizing: border-box; width: 100%;">
+
+    <div style="max-width: 950px; margin: 0 auto;">
+
+        <div style="text-align: center; margin-bottom: 40px;">
+            <h2 style="color: #e67e22; font-size: 14px; text-transform: uppercase; letter-spacing: 4px; margin-bottom: 5px;">Admin Control</h2>
+            <h1 style="color: #fff; margin-top: 0; font-size: 2.2rem;">IT System Operations</h1>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 40px;">
+
+            <div style="background: #252525; padding: 25px; border-radius: 12px; border-left: 4px solid #3498db; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                <h3 style="color: #fff; margin-top: 0;"><i class="fa fa-plus-circle" style="margin-right: 10px; color: #3498db;"></i>Asset Registration</h3>
+                <p style="font-size: 13px; line-height: 1.6; color: #bbb;">
+                    Click the <b>"Asset"</b> button in the sidebar to open the registration form.
+                    <b>Note:</b> You must fill all fields (ID, Name, Type) to successfully create the asset in the database.
+                </p>
+            </div>
+
+            <div style="background: #252525; padding: 25px; border-radius: 12px; border-left: 4px solid #e74c3c; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                <h3 style="color: #fff; margin-top: 0;"><i class="fa fa-trash" style="margin-right: 10px; color: #e74c3c;"></i>Decommissioning</h3>
+                <p style="font-size: 13px; line-height: 1.6; color: #bbb;">
+                    To remove an asset, click its icon on the map to open the <b>Slide-in Panel</b>.
+                    Click the <b>Red Delete Button</b>. Warning: This action is permanent and removes all history.
+                </p>
+            </div>
+
+        </div>
+
+        <div style="background: #1a1a1a; padding: 30px; border-radius: 12px; border: 1px solid #333;">
+            <h3 style="color: #fff; border-bottom: 1px solid #333; padding-bottom: 15px; margin-top: 0;">
+                <i class="fa fa-server" style="margin-right: 10px; color: #2ecc71;"></i>Backend Maintenance
+            </h3>
+
+            <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; color: #ddd;">
+                <thead>
+                <tr style="text-align: left; color: #888; text-transform: uppercase; font-size: 11px;">
+                    <th style="padding: 10px; border-bottom: 2px solid #333;">Operational Task</th>
+                    <th style="padding: 10px; border-bottom: 2px solid #333;">Standard Procedure</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td style="padding: 15px 10px; border-bottom: 1px solid #252525; color: #fff; font-weight: 600;">Server Initialization</td>
+                    <td style="padding: 15px 10px; border-bottom: 1px solid #252525; line-height: 1.5;">Verify Node.js is running on <b>Port 3000</b>. Without the backend active, map pins and history logs will not populate.</td>
+                </tr>
+                <tr>
+                    <td style="padding: 15px 10px; border-bottom: 1px solid #252525; color: #fff; font-weight: 600;">Data Volatility</td>
+                    <td style="padding: 15px 10px; border-bottom: 1px solid #252525; line-height: 1.5;">The <b>System Data Model</b> is currently in-memory. Avoid restarting the server unless necessary, as it clears all current asset history.</td>
+                </tr>
+                <tr>
+                    <td style="padding: 15px 10px; color: #fff; font-weight: 600;">Hardware Check</td>
+                    <td style="padding: 15px 10px; line-height: 1.5;">If the <b>"Last Seen"</b> timestamp stops updating, verify the BLE Gateway power and check the tracker battery.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top: 40px; text-align: center; font-size: 11px; color: #555;">
+            IT ADMIN MODE | System Version 1.0.2 | St. Joseph Hospital Project
+        </div>
+    </div>
 </div>
 
 <div id="asset-detail-panel" class="detail-panel">
