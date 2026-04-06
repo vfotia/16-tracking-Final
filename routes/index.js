@@ -42,7 +42,7 @@ let locationHistory = [
 let assets = [
   {
     id: "T-100",
-    name: "Red Truck",
+    name: "IV Pump",
     category: "crash carts", // Matches 'Crash Carts' filter
     floor: "north",          // Matches 'North Wing' filter
     location: "Room 202",    // For the Detail Panel
