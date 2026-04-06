@@ -29,10 +29,10 @@ const authenticateToken = (req, res, next) => {
 let users = [];
 
 let locationHistory = [
-  { id: "T-100", name: "Red Truck", location: "North Wing - Room 202", lastUpdated: new Date("2026-03-25T10:00:00"), floor: "North"},
-  { id: "T-100", name: "Red Truck", location: "North Wing - Hallway B", lastUpdated: new Date("2026-03-25T09:30:00"), floor: "North"},
-  { id: "T-100", name: "Red Truck", location: "Loading Dock", lastUpdated: new Date("2026-03-25T09:00:00"), floor: "South" },
-  { id: "T-100", name: "Red Truck", location: "Loading Dock", lastUpdated: new Date("2026-03-10T09:00:00"), floor: "South" },
+  { id: "T-100", name: "IV Pump", location: "North Wing - Room 202", lastUpdated: new Date("2026-03-25T10:00:00"), floor: "North"},
+  { id: "T-100", name: "IV Pump", location: "North Wing - Hallway B", lastUpdated: new Date("2026-03-25T09:30:00"), floor: "North"},
+  { id: "T-100", name: "IV Pump", location: "Loading Dock", lastUpdated: new Date("2026-03-25T09:00:00"), floor: "South" },
+  { id: "T-100", name: "IV Pump", location: "Loading Dock", lastUpdated: new Date("2026-03-10T09:00:00"), floor: "South" },
   { id: "T-200", name: "WheelChair", location: "North Wing - Room 202", lastUpdated: new Date("2026-03-03T10:00:00"),floor: "North" },
   { id: "T-200", name: "WheelChair", location: "North Wing - Hallway B", lastUpdated: new Date("2026-03-14T09:30:00"), floor: "North"  },
   { id: "T-200", name: "WheelChair", location: "Loading Dock", lastUpdated: new Date("2026-03-18T09:00:00"), floor: "North"  },
