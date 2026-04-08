@@ -67,7 +67,7 @@ The web app cosists of 5 html pages:
 1. **Register Screen:** Allows user to create new usernames and passwords as well as assigning IT staff designation.
 2. **Menu Screen:** Login Screen that recives pre-existing usernames and passwords.
 3. **Staff Main:** After successful login users without IT designation are redirected to this page. It displays the asset location map, asset filter system, and user information page.
-4. **IT Main** After successful login users with IT designation are redirected to this page. It displays the asset location map, asset filter system, and user information page, as well as a button to redirect to the Asset page.
+4. **IT Main:** After successful login users with IT designation are redirected to this page. It displays the asset location map, asset filter system, and user information page, as well as a button to redirect to the Asset page.
 5. **Assets:** Only IT staff can access this page, it acts as a hub to add and remove assets as well as view all existing assets and their history.
 
 ### Installation
