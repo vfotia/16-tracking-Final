@@ -71,13 +71,8 @@ The web app cosists of 5 html pages:
 5. **Assets:** Only IT staff can access this page, it acts as a hub to add and remove assets as well as view all existing assets and their history.
 
 ### Installation
-1. Navigate to `web-app/`
-2. Install dependencies: `npm install`
-3. Start the server: `npm start`
-4. Access via: `http://localhost:3000`
-
-### Key Dependencies
-- `express`, `bcryptjs`, `jsonwebtoken`, `pug`.
+1. Navigate to `package.json`
+2. Start the server: Run script "start"
 
 ---
 
