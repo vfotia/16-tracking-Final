@@ -6,39 +6,39 @@ A comprehensive indoor positioning solution utilizing ESP32-C3 trackers, nRF5284
 
 The system consists of three main components:
 
-1.  **Beacons (nRF52840 Base):** Stationary units that broadcast BLE advertisements every 100ms containing their ID and calibrated TX power.
-2.  **Tracker (ESP32-C3):** A mobile device that scans for beacon signals, calculates distances using a path-loss model, and performs WLS trilateration for XY positioning. It also uses a BMP390 barometer for Z-axis (floor) detection.
-3.  **Web App (Node.js/Express):** A central dashboard for user authentication (JWT), asset categorization, and long-term location history tracking.
+1.  **Beacons (nRF52840 Base):** [Stationary BLE radio units that continuously broadcast their identity and transmit power to enable distance estimation by the tracker]
+2.  **Tracker (ESP32-C3):** [Mobile device that listens for beacon signals, applies signal processing to estimate distances, and computes absolute position using geometry]
+3.  **Web App (Node.js/Express):** [Central server that receives position data from trackers, authenticates users, and provides a browser-based interface for monitoring and asset management]
 
 ### Data Flow
-1. **Beacons** broadcast Manufacturer Data (Company ID 0x0059 + BaseID + TxPower).
-2. **Tracker** scans BLE, calculates distances, and determines coordinates (XY/Z).
-3. **Local Dashboard (Port 80):** Hosted on the ESP32-C3 for real-time tuning and local Map UI.
-4. **Central Web App (Port 3000):** Aggregates data for multi-user management and history.
+1. **Beacons** [Transmit advertisement packets every 100ms containing a compact payload: Company Identifier (0x0059 for Nordic) + Base Station ID + Calibrated TX Power at 1m]
+2. **Tracker** [Operates a continuous BLE scanner that captures all beacon advertisements, extracts RSSI values, applies Kalman filtering for smoothing, and runs trilateration algorithms to produce X/Y/Z coordinates]
+3. **Local Dashboard (Port 80):** [Embedded web server running on the ESP32-C3 that serves a single-page HTML/JS dashboard for on-site debugging, configuration, and live visualization of position data]
+4. **Central Web App (Port 3000):** [Node.js backend that aggregates data from multiple trackers, stores historical position records in a database, and serves the multi-user authentication system]
 
 ---
 
 ## Hardware Requirements
-- **Tracker:** Seeed Studio XIAO ESP32-C3 + Adafruit BMP390 Barometer.
-- **Beacons:** 3× Seeed Studio XIAO nRF52840.
-- **Standard Wiring (I2C):** SDA=6, SCL=7. BMP390 address is typically `0x77`.
+- **Tracker:** [Seeed Studio XIAO ESP32-C3 — a compact ESP32-C3 based development board with built-in WiFi and BLE, acting as the primary processing unit for the mobile tracker] + [Adafruit BMP390 Barometer — I2C pressure sensor used to measure ambient atmospheric pressure for calculating relative altitude changes between floors]
+- **Beacons:** [3× Seeed Studio XIAO nRF52840 — identical BLE radio modules programmed as stationary reference points, each broadcasting a unique identifier at 100ms intervals]
+- **Standard Wiring (I2C):** [SDA=6, SCL=7 — predefined GPIO pins on the ESP32-C3 for I2C communication with the BMP390 barometer] | [BMP390 address is typically 0x77 — I2C slave address when the SDO pin is pulled high, determined by hardware configuration]
 
 ---
 
 ## Developer Commands (Arduino CLI)
 
-**Arduino CLI Path:** `arduino-cli`
+**Arduino CLI Path:** [Command-line interface for compiling and uploading Arduino sketches without the Arduino IDE — must be installed and configured with the appropriate board URLs]
 
 ### ESP32-C3 Tracker
-- **Compile:**
+- **Compile:** [Compiles the ESP32-C3 tracker sketch using the espressif:esp32 board package with the XIAO_ESP32C3 board definition]
   `arduino-cli compile --fqbn esp32:esp32:XIAO_ESP32C3 ./esp32c3_tracker`
-- **Upload:**
+- **Upload:** [Flashes the compiled binary to the ESP32-C3 device connected to the specified serial port — <PORT> is typically COMx on Windows or /dev/ttyUSBx on Linux]
   `arduino-cli upload -p <PORT> --fqbn esp32:esp32:XIAO_ESP32C3 ./esp32c3_tracker`
 
 ### nRF52840 Base (Beacon)
-- **Compile:**
+- **Compile:** [Compiles the nRF52840 beacon firmware using the Seeed nRF52 board package targeting the XIAO nRF52840 board definition]
   `arduino-cli compile --fqbn Seeeduino:nrf52:xiaonRF52840 ./nrf52840_base`
-- **Upload:**
+- **Upload:** [Flashes the compiled binary to the nRF52840 device connected to the specified serial port]
   `arduino-cli upload -p <PORT> --fqbn Seeeduino:nrf52:xiaonRF52840 ./nrf52840_base`
 
 ---
@@ -46,44 +46,45 @@ The system consists of three main components:
 ## Critical Serial Commands (115200 baud)
 
 ### Tracker (XIAO C3)
-- `WIFI <ssid> <pass>`: Connects to WiFi. Supports spaces in SSID.
-- `KNOWNDIST <id> <m>`: Calibrates base offset given a known distance.
-- `REGFLOOR <n>`: Registers current altitude as floor level `n`.
-- `STATUS`: Dumps current coordinates, base visibility, and WiFi state.
-- `BASE <id> <x> <y>`: Set base station coordinate in meters.
-- `PATHLOSS <n>`: Set path-loss exponent (typically 2.0 to 3.5).
+- `WIFI <ssid> <pass>`: [Establishes WiFi connection using the provided credentials — credentials are stored in non-volatile storage and automatically reconnect on reboot; supports SSIDs containing spaces when properly quoted]
+- `KNOWNDIST <id> <m>`: [Allows manual calibration of a specific base station's distance offset — useful when the actual distance is known precisely (e.g., measured with a tape measure) to improve overall positioning accuracy]
+- `REGFLOOR <n>`: [Captures the current barometric pressure reading as the reference altitude for floor number n — this creates a baseline for detecting floor changes based on pressure differences]
+- `STATUS`: [Outputs a comprehensive diagnostic report to the serial console including current X/Y coordinates, Z (floor) estimation, RSSI values from all detected bases, WiFi connection status, and system uptime]
+- `BASE <id> <x> <y>`: [Stores the physical (x, y) coordinates in meters for base station id — these coordinates define the reference points used in the trilateration algorithm]
+- `PATHLOSS <n>`: [Adjusts the path-loss exponent n in the RSSI-to-distance model (d = 10^((TxPower - RSSI) / (10*n))) — higher values account for more signal attenuation in cluttered environments]
 
 ### Base (XIAO nRF52)
-- `SETID <0|1|2>`: Required for first boot or after `RESET`.
-- `RESET`: Clears ID and enters breathing-LED provisioning mode.
+- `SETID <0|1|2>`: [Permanently stores the base station ID (0, 1, or 2) in flash memory — this ID is broadcast in every advertisement and is critical for the tracker to distinguish between multiple bases]
+- `RESET`: [Erases the stored base ID from flash and reboots — the device enters a "provisioning mode" indicated by a slow breathing LED pattern, awaiting a new SETID command]
 
 ---
 
-## Web Application
+## Web Application Setup
 
 The central web app provides user authentication and asset management.
 
-The web app cosists of 5 html pages:
-1. **Register Screen:** Allows user to create new usernames and passwords as well as assigning IT staff designation.
-2. **Menu Screen:** Login Screen that recives pre-existing usernames and passwords.
-3. **Staff Main:** After successful login users without IT designation are redirected to this page. It displays the asset location map, asset filter system, and user information page.
-4. **IT Main:** After successful login users with IT designation are redirected to this page. It displays the asset location map, asset filter system, and user information page, as well as a button to redirect to the Asset page.
-5. **Assets:** Only IT staff can access this page, it acts as a hub to add and remove assets as well as view all existing assets and their history.
-
 ### Installation
-1. Navigate to `package.json`
-2. Start the server: Run script "start"
+1. Navigate to [web-app/ — the directory containing the Node.js application source code and package.json configuration file]
+2. Install dependencies: `npm install` [Downloads and installs all packages defined in package.json, including express, bcryptjs, jsonwebtoken, pug, and their transitive dependencies]
+3. Start the server: `npm start` [Launches the Express server on port 3000, initializing the database and mounting all routes]
+4. Access via: `http://localhost:3000` [Opens the registration/login portal in a web browser]
+
+### Key Dependencies
+- `express` [Fast, minimalist web framework for Node.js that handles HTTP routing, middleware, and template rendering]
+- `bcryptjs` [Library for hashing passwords using the bcrypt algorithm to securely store user credentials]
+- `jsonwebtoken` [Implementation of JSON Web Tokens (JWT) for stateless authentication and session management]
+- `pug` [Template engine (formerly Jade) used to render server-side HTML views with dynamic data]
 
 ---
 
 ## Positioning Logic
-- **XY Positioning:** Uses Weighted Least Squares (WLS) trilateration based on Kalman-filtered RSSI values.
-- **Z-Axis:** Uses relative barometer delta from the BMP390 sensor to determine the current floor level.
-- **Local Tuning:** The ESP32-C3 hosts a web server on Port 80 (`dashboard.cpp`) for real-time calibration and visual feedback.
+- **XY Positioning:** [Uses Weighted Least Squares (WLS) — a statistical optimization method that solves the non-linear trilateration problem by minimizing the weighted sum of squared errors between estimated and measured distances; weights are derived from RSSI signal quality]
+- **Z-Axis:** [Uses relative barometer delta — the BMP390 measures ambient pressure which decreases with altitude; by comparing current pressure to registered floor reference points, the system determines which floor the tracker is on based on pressure thresholds]
+- **Local Tuning:** [The ESP32-C3 hosts a web server on Port 80 — the dashboard.cpp module serves a self-contained HTML/JavaScript interface that plots the position in real-time, displays RSSI metrics, and provides form controls for adjusting calibration parameters without recompiling]
 
 ---
 
 ## Accuracy Expectations
-- **Open Space:** 0.5m – 3.5m accuracy.
-- **Obstructed:** 1.5m – 5.0m accuracy.
-- **Floor Detection:** Reliable within building environments (±0.25m typical precision).
+- **Open Space:** [0.5m – 1.5m — achievable when beacons are placed in a wide triangle with clear line-of-sight, minimal multipath interference, and properly calibrated TX power values]
+- **Obstructed:** [1.5m – 3.0m — typical performance when walls, furniture, or human bodies block direct signal paths, causing additional signal attenuation and reflection-based errors]
+- **Floor Detection:** [Reliable within building environments (±0.25m typical precision) — the barometer can reliably distinguish floor transitions of 2.5m or greater; smaller floor heights may cause misclassification due to natural pressure fluctuations]
