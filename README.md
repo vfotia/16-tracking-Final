@@ -69,7 +69,7 @@ The system consists of three main components:
 
 The central web app provides user authentication and asset management.
 
-The web app cosists of 5 html pages:
+The web app consists of 5 html pages:
 
 1. **Register Screen:** Allows user to create new usernames and passwords as well as assigning IT staff designation.
 2. **Menu Screen:** Login Screen that recives pre-existing usernames and passwords.
