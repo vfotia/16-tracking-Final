@@ -77,6 +77,22 @@ The central web app provides user authentication and asset management.
 
 ---
 
+## Firmware Dependencies
+
+### ESP32-C3 Tracker
+- **NimBLE-Arduino** [Lightweight BLE stack for ESP32 that provides low-level BLE advertising and scanning functionality without the overhead of Bluedroid]
+- **ESPAsyncWebServer** [Asynchronous HTTP server and WebSocket handler that runs on the ESP32, enabling the embedded dashboard without blocking the main loop]
+- **Adafruit BMP3XX** [Driver library for the BMP390 barometric pressure sensor that provides I2C communication and pressure-to-altitude conversion]
+- **ArduinoJson** [JSON serialization and deserialization library for encoding/decoding position data and configuration payloads]
+- **AsyncTCP** [Asynchronous TCP stack required by ESPAsyncWebServer for handling concurrent network connections on the ESP32]
+
+### nRF52840 Base (Beacon)
+- **ArduinoBLE** [Official Arduino library for BLE operations on nRF52840, providing peripheral role advertising and GATT server functionality]
+- **LittleFS** [Flash file system (exposed via InternalFileSystem) that persists base station configuration across power cycles]
+- **ArduinoJson** [JSON library used for parsing and serializing the base configuration file stored on flash]
+
+---
+
 ## Positioning Logic
 - **XY Positioning:** [Uses Weighted Least Squares (WLS) — a statistical optimization method that solves the non-linear trilateration problem by minimizing the weighted sum of squared errors between estimated and measured distances; weights are derived from RSSI signal quality]
 - **Z-Axis:** [Uses relative barometer delta — the BMP390 measures ambient pressure which decreases with altitude; by comparing current pressure to registered floor reference points, the system determines which floor the tracker is on based on pressure thresholds]
