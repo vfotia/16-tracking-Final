@@ -41,4 +41,9 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 St. Joseph Hospital Tracker running at http://localhost:${PORT}`);
+});
+
 module.exports = app;

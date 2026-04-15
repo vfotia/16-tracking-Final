@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7cbc2a3d-66fb-41b1-93c2-c4da0346573f" name="Changes" comment="Deleted the mock database" />
+    <list default="true" id="7cbc2a3d-66fb-41b1-93c2-c4da0346573f" name="Changes" comment="Deleted the mock database">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -52,7 +54,7 @@
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;Rebasing Backend-Integrated-Frontend&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;Final-Project&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;javascript.nodejs.core.library.configured.version&quot;: &quot;24.14.0&quot;,
     &quot;javascript.nodejs.core.library.typings.version&quot;: &quot;24.12.0&quot;,
